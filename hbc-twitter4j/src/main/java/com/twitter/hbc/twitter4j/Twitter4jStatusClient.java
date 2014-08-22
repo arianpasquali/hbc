@@ -26,7 +26,9 @@ import twitter4j.StatusListener;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import twitter4j.*;
 
+import twitter4j.TwitterObjectFactory;
 /**
  * Threadsafe
  */
@@ -42,11 +44,30 @@ public class Twitter4jStatusClient extends BaseTwitter4jClient {
   }
 
   @Override
-  protected void onStatus(long sitestreamUser, final Status status) {
+  protected void onStatus(long sitestreamUser, final JSONObject status) {
     for (StatusListener listener : statusListeners) {
-      listener.onStatus(status);
+		listener.onStatus(status);
+	}
+  }
+  
+  @Override
+  protected void onStatus(long sitestreamUser, final Status status) {
+    for (StatusListener listener : statusListeners) {		
+	  	  listener.onStatus(status);	  
     }
   }
+
+  // protected void onStatus(long sitestreamUser, final String statusJsonString) {
+  //     for (StatusListener listener : statusListeners) {
+  //       listener.onStatus(status);
+  //     }
+  // }
+  //
+  // protected void onStatus(long sitestreamUser, final JSONObject statusJson) {
+  //     for (StatusListener listener : statusListeners) {
+  //       listener.onStatus(status);
+  //     }
+  // }
 
   @Override
   protected void onDelete(long sitestreamUser, StatusDeletionNotice delete) {

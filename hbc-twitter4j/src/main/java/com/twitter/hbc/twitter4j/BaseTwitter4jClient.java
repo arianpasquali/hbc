@@ -39,14 +39,30 @@ class BaseTwitter4jClient implements Twitter4jClient {
   private final BlockingQueue<String> messageQueue;
   private final ExecutorService executorService;
   private final PublicObjectFactory factory;
+  
+  private boolean jsonStoreEnabled = false;
 
   protected BaseTwitter4jClient(Client client, BlockingQueue<String> blockingQueue, ExecutorService executorService) {
     this.client = Preconditions.checkNotNull(client);
     this.messageQueue = Preconditions.checkNotNull(blockingQueue);
     this.executorService = Preconditions.checkNotNull(executorService);
-    this.factory = new PublicObjectFactory(new ConfigurationBuilder().build());
+	
+	System.out.println("setJSONStoreEnabled : true");
+	
+    ConfigurationBuilder cb = new ConfigurationBuilder();
+    cb.setJSONStoreEnabled(true);
+	
+	this.factory = new PublicObjectFactory(cb.build());
   }
 
+  public boolean isJSONStoreEnabled(	){
+	  return this.jsonStoreEnabled;
+  }
+  
+  public void setJSONStoreEnabled(boolean jsonStoreEnabled){
+	  this.jsonStoreEnabled = jsonStoreEnabled;
+  }
+  
   @Override
   public void connect() {
     client.connect();
@@ -228,7 +244,14 @@ class BaseTwitter4jClient implements Twitter4jClient {
 
   private void processStatus(long sitestreamUser, JSONObject json) throws TwitterException {
     Status status = factory.createStatus(json);
-    onStatus(sitestreamUser, status);
+    
+	if(isJSONStoreEnabled()){
+		onStatus(sitestreamUser, json);
+	}else{
+		onStatus(sitestreamUser, status);	
+		
+	}
+	
   }
 
   private void processDirectMessage(long sitestreamUser, JSONObject json) throws TwitterException, JSONException {
@@ -289,7 +312,7 @@ class BaseTwitter4jClient implements Twitter4jClient {
   private void processRetweet(long sitestreamUser, JSONObject json) throws TwitterException, JSONException {
     User source = factory.createUser(JSONObjectParser.parseEventSource(json));
     User target = factory.createUser(JSONObjectParser.parseEventTarget(json));
-    Status status = factory.createStatus(JSONObjectParser.parseEventTargetObject(json));
+	Status status = factory.createStatus(JSONObjectParser.parseEventTargetObject(json));
     onRetweet(sitestreamUser, source, target, status);
   }
 
@@ -376,7 +399,15 @@ class BaseTwitter4jClient implements Twitter4jClient {
   }
 
   protected void onStatus(long sitestreamUser, final Status status) {
-    logger.info("Unhandled event: onStatus");
+    logger.info("Unhandled event: onStatus(Status)");
+  }
+  
+  protected void onStatus(long sitestreamUser, final String statusJsonString) {
+    logger.info("Unhandled event: onStatus(String)");
+  }
+  
+  protected void onStatus(long sitestreamUser, final JSONObject statusJson) {
+    logger.info("Unhandled event: onStatus(JSONObject)");
   }
 
   protected void onDelete(long sitestreamUser, StatusDeletionNotice delete) {

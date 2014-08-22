@@ -31,6 +31,13 @@ import org.apache.http.protocol.HttpContext;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.util.EntityUtils;
+
 /**
  * There's currently a bug in DecompressingHttpClient that does not allow it to properly abort requests.
  * This class is a hacky workaround to make things work.
@@ -54,6 +61,48 @@ public class RestartableHttpClient implements HttpClient {
 
   public void setup() {
     DefaultHttpClient defaultClient = new DefaultHttpClient(new PoolingClientConnectionManager(schemeRegistry), params);
+
+	System.out.println("checking proxy settings ...");
+	
+	Boolean isProxyEnabled = Boolean.parseBoolean(System.getProperty("socialbus.proxy.support.enabled"));
+	System.out.println("proxy enabled? " + isProxyEnabled);
+	
+	if(isProxyEnabled){
+		System.out.println("loading proxy settings ...");
+			
+		String proxyHost = System.getProperty("socialbus.proxy.host");
+		Integer proxyPort = Integer.parseInt(System.getProperty("socialbus.proxy.port"));
+		String proxyUser = System.getProperty("socialbus.proxy.username");
+		String proxyPass = System.getProperty("socialbus.proxy.password");
+		
+		System.out.println("proxy host: " + proxyHost);
+		System.out.println("proxy port: " + proxyPort);
+		System.out.println("proxy user: " + proxyUser);
+		
+	    CredentialsProvider credsProvider = new BasicCredentialsProvider();
+	          credsProvider.setCredentials(
+	                  new AuthScope(proxyHost, proxyPort),
+	                  new UsernamePasswordCredentials(proxyUser, proxyPass));
+		
+		defaultClient.setCredentialsProvider(credsProvider);
+		
+		// NTCredentials ntCreds = new NTCredentials(ntUsername, ntPassword,localMachineName, domainName );
+		//
+		// CredentialsProvider credsProvider = new BasicCredentialsProvider();
+		// credsProvider.setCredentials( new AuthScope(proxyHost,proxyPort), ntCreds );
+		// HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+		//
+		// clientBuilder.useSystemProperties();
+		// clientBuilder.setProxy(new HttpHost(pxInfo.getProxyURL(), pxInfo.getProxyPort()));
+		// clientBuilder.setDefaultCredentialsProvider(credsProvider);
+		// clientBuilder.setProxyAuthenticationStrategy(new ProxyAuthenticationStrategy());
+		
+		// defaultClient.getCredentialsProvider().setCredentials(
+// 		    new AuthScope(proxyHost, proxyPort),
+// 		    new UsernamePasswordCredentials(proxyUser, proxyPass));
+		
+		System.out.println("proxy setup done.");
+	}	
 
     auth.setupConnection(defaultClient);
 
