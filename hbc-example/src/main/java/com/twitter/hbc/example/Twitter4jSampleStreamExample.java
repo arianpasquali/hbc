@@ -30,6 +30,7 @@ import twitter4j.StallWarning;
 import twitter4j.Status;
 import twitter4j.StatusDeletionNotice;
 import twitter4j.StatusListener;
+import twitter4j.JSONObject;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -40,8 +41,11 @@ public class Twitter4jSampleStreamExample {
 
   // A bare bones listener
   private StatusListener listener1 = new StatusListener() {
-    @Override
-    public void onStatus(Status status) {}
+	@Override
+	public void onStatus(Status status) {}
+		  
+	@Override
+    public void onStatus(JSONObject status) {}
 
     @Override
     public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {}
@@ -61,6 +65,9 @@ public class Twitter4jSampleStreamExample {
 
   // A bare bones StatusStreamHandler, which extends listener and gives some extra functionality
   private StatusListener listener2 = new StatusStreamHandler() {
+  	@Override
+	public void onStatus(JSONObject status) {}
+		  
     @Override
     public void onStatus(Status status) {}
 
